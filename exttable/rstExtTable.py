@@ -2,7 +2,8 @@
 
     Implementation of the ``ext-table`` reST-directive.
 
-    :copyright:  Copyright (C) 2016  Markus Heiser
+    Based on flat-table by Markus Heiser, original Copyright (C) 2016  Markus Heiser
+    (see https://github.com/torvalds/linux/blob/master/Documentation/sphinx/rstFlatTable.py)
     :license:    GPL Version 2, June 1991 see linux/COPYING for details.
 
     The ``ext-table`` (:py:class:`ExtTable`) is a double-stage list similar to
