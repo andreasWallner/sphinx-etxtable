@@ -46,6 +46,7 @@ def setup(app):
     app.add_directive("flat-table", FlatTable)
     roles.register_local_role('cspan', c_span)
     roles.register_local_role('rspan', r_span)
+    roles.register_local_role('cclass', c_class)
 
     return dict(
         version = __version__,
@@ -75,10 +76,17 @@ def r_span(name, rawtext, text, lineno, inliner, options=None, content=None):
     msglist  = []
     return nodelist, msglist
 
+def c_class(name, rawtext, text, lineno, inliner, options=None, content=None):
+    options = options if options is not None else {}
+    content = content if content is not None else []
+    nodelist = [cellClass(classes=directives.class_option(text))]
+    msglist = []
+    return nodelist, msglist
 
 # ==============================================================================
 class rowSpan(nodes.General, nodes.Element): pass # pylint: disable=C0103,C0321
 class colSpan(nodes.General, nodes.Element): pass # pylint: disable=C0103,C0321
+class cellClass(nodes.General, nodes.Element): pass
 # ==============================================================================
 
 # ==============================================================================
@@ -178,7 +186,8 @@ class ListTableBuilder(object):
         for cell in row_data:
             if cell is None:
                 continue
-            cspan, rspan, cellElements = cell
+            print(cell)
+            cspan, rspan, cellclasses, cellElements = cell
 
             attributes = {"classes" : classes}
             if rspan:
@@ -187,6 +196,8 @@ class ListTableBuilder(object):
                 attributes['morecols'] = cspan
             entry = nodes.entry(**attributes)
             entry.extend(cellElements)
+            for cc in cellclasses:
+                entry.set_class(cc)
             row += entry
         return row
 
@@ -209,7 +220,13 @@ class ListTableBuilder(object):
         for rowNum, rowItem in enumerate(node[0]):
             row = self.parseRowItem(rowItem, rowNum)
             self.rows.append(row)
+        for row in self.rows:
+            print(row)
         self.roundOffTableDefinition()
+        print()
+        for row in self.rows:
+            print(row)
+        
 
     def roundOffTableDefinition(self):
         u"""Round off the table definition.
@@ -266,13 +283,13 @@ class ListTableBuilder(object):
             x =  self.max_cols - len(row)
             if x and not fill_cells:
                 if row[-1] is None:
-                    row.append( ( x - 1, 0, []) )
+                    row.append( ( x - 1, 0, [], []) )
                 else:
-                    cspan, rspan, content = row[-1]
-                    row[-1] = (cspan + x, rspan, content)
+                    cspan, rspan, cellclasses, content = row[-1]
+                    row[-1] = (cspan + x, rspan, cellclasses, content)
             elif x and fill_cells:
                 for i in range(x):
-                    row.append( (0, 0, nodes.comment()) )
+                    row.append( (0, 0, [], nodes.comment()) )
 
     def pprint(self):
         # for debugging
@@ -323,18 +340,19 @@ class ListTableBuilder(object):
                 % (self.directive.name, rowNum + 1))
 
         for cellItem in cell:
-            cspan, rspan, cellElements = self.parseCellItem(cellItem)
+            cspan, rspan, cellclasses, cellElements = self.parseCellItem(cellItem)
             if target is not None:
                 cellElements.insert(0, target)
-            row.append( (cspan, rspan, cellElements) )
+            row.append( (cspan, rspan, cellclasses, cellElements) )
         return row
 
     def parseCellItem(self, cellItem):
         # search and remove cspan, rspan colspec from the first element in
         # this listItem (field).
         cspan = rspan = 0
+        cellclasses = []
         if not len(cellItem):
-            return cspan, rspan, []
+            return cspan, rspan, [], []
         for elem in cellItem[0]:
             if isinstance(elem, colSpan):
                 cspan = elem.get("span")
@@ -344,4 +362,8 @@ class ListTableBuilder(object):
                 rspan = elem.get("span")
                 elem.parent.remove(elem)
                 continue
-        return cspan, rspan, cellItem[:]
+            if isinstance(elem, cellClass):
+                cellclasses = elem.get("classes")
+                elem.parent.remove(elem)
+                continue
+        return cspan, rspan, cellclasses, cellItem[:]
