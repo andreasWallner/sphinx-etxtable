@@ -18,6 +18,7 @@
     * stub-columns:  [int] count of stub columns
     * widths:        [[int] [int] ... ] widths of columns
     * fill-cells:    instead of autospann missing cells, insert missing cells
+    * class:         [[string] [string] ...] classes to be added to table
     roles:
     * cspan: [int] additionale columns (*morecols*)
     * rspan: [int] additionale rows (*morerows*)
