@@ -1,10 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8; mode: python -*-
-# pylint: disable=C0330, R0903, R0912
+""" flat-table
 
-u"""
-    flat-table
-    ~~~~~~~~~~
     Implementation of the ``flat-table`` reST-directive.
     :copyright:  Copyright (C) 2016  Markus Heiser
     :license:    GPL Version 2, June 1991 see linux/COPYING for details.
@@ -146,7 +141,8 @@ class ListTableBuilder(object):
         table = nodes.table()
         tgroup = nodes.tgroup(cols=len(colwidths))
         table += tgroup
-
+        if 'class' in self.directive.options:
+            [table.set_class(c) for c in self.directive.options['class']]
 
         for colwidth in colwidths:
             colspec = nodes.colspec(colwidth=colwidth)
