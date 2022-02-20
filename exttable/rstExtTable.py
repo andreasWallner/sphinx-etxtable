@@ -1,27 +1,36 @@
-""" flat-table
+""" ext-table
 
-    Implementation of the ``flat-table`` reST-directive.
+    Implementation of the ``ext-table`` reST-directive.
+
     :copyright:  Copyright (C) 2016  Markus Heiser
     :license:    GPL Version 2, June 1991 see linux/COPYING for details.
-    The ``flat-table`` (:py:class:`FlatTable`) is a double-stage list similar to
-    the ``list-table`` with some additional features:
+
+    The ``ext-table`` (:py:class:`ExtTable`) is a double-stage list similar to
+    the ``list-table`` with some additional features, based on the linuxdoc
+    ``flat-table`` directive:
+
     * *column-span*: with the role ``cspan`` a cell can be extended through
       additional columns
     * *row-span*: with the role ``rspan`` a cell can be extended through
       additional rows
+    * *cell-class*: with the role ``cclass`` a list of classes can be attached
+      to a cell
     * *auto span* rightmost cell of a table row over the missing cells on the
       right side of that table-row.  With Option ``:fill-cells:`` this behavior
       can be changed from *auto span* to *auto fill*, which automatically inserts
       (empty) cells instead of spanning the last cell.
+
     Options:
     * header-rows:   [int] count of header rows
     * stub-columns:  [int] count of stub columns
     * widths:        [[int] [int] ... ] widths of columns
     * fill-cells:    instead of autospann missing cells, insert missing cells
     * class:         [[string] [string] ...] classes to be added to table
+
     roles:
     * cspan: [int] additionale columns (*morecols*)
     * rspan: [int] additionale rows (*morerows*)
+    * cclass: [string] [[string]...] classes to be attached
 """
 
 # ==============================================================================
@@ -43,7 +52,7 @@ __version__  = '1.0'
 def setup(app):
 # ==============================================================================
 
-    app.add_directive("flat-table", FlatTable)
+    app.add_directive("ext-table", ExtTable)
     roles.register_local_role('cspan', c_span)
     roles.register_local_role('rspan', r_span)
     roles.register_local_role('cclass', c_class)
@@ -90,10 +99,10 @@ class cellClass(nodes.General, nodes.Element): pass
 # ==============================================================================
 
 # ==============================================================================
-class FlatTable(Table):
+class ExtTable(Table):
 # ==============================================================================
 
-    u"""FlatTable (``flat-table``) directive"""
+    u"""ExtTable (``ext-table``) directive"""
 
     option_spec = {
         'name': directives.unchanged
@@ -117,7 +126,7 @@ class FlatTable(Table):
         self.state.nested_parse(self.content, self.content_offset, node)
 
         tableBuilder = ListTableBuilder(self)
-        tableBuilder.parseFlatTableNode(node)
+        tableBuilder.parseExtTableNode(node)
         tableNode = tableBuilder.buildTableNode()
         # SDK.CONSOLE()  # print --> tableNode.asdom().toprettyxml()
         if title:
@@ -158,9 +167,9 @@ class ListTableBuilder(object):
             # FIXME: It seems, that the stub method only works well in the
             # absence of rowspan (observed by the html builder, the docutils-xml
             # build seems OK).  This is not extraordinary, because there exists
-            # no table directive (except *this* flat-table) which allows to
+            # no table directive (except *this* ext-table) which allows to
             # define coexistent of rowspan and stubs (there was no use-case
-            # before flat-table). This should be reviewed (later).
+            # before ext-table). This should be reviewed (later).
             if stub_columns:
                 colspec.attributes['stub'] = 1
                 stub_columns -= 1
@@ -186,7 +195,6 @@ class ListTableBuilder(object):
         for cell in row_data:
             if cell is None:
                 continue
-            print(cell)
             cspan, rspan, cellclasses, cellElements = cell
 
             attributes = {"classes" : classes}
@@ -209,8 +217,8 @@ class ListTableBuilder(object):
             , line = self.directive.lineno )
         raise SystemMessagePropagation(error)
 
-    def parseFlatTableNode(self, node):
-        u"""parses the node from a :py:class:`FlatTable` directive's body"""
+    def parseExtTableNode(self, node):
+        u"""parses the node from a :py:class:`ExtTable` directive's body"""
 
         if len(node) != 1 or not isinstance(node[0], nodes.bullet_list):
             self.raiseError(
@@ -220,12 +228,7 @@ class ListTableBuilder(object):
         for rowNum, rowItem in enumerate(node[0]):
             row = self.parseRowItem(rowItem, rowNum)
             self.rows.append(row)
-        for row in self.rows:
-            print(row)
         self.roundOffTableDefinition()
-        print()
-        for row in self.rows:
-            print(row)
         
 
     def roundOffTableDefinition(self):
