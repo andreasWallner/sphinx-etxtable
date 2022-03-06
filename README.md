@@ -36,16 +36,16 @@ In `conf.py` add e.g.:
       :class: my-class my-other-class
       :name: my-name
 
-      * - :cspan:`5` :cclass:`header-class` head
+      * - :cspan:`3` :cclass:`header-class` head
       * - len
         - 31:27
-        - :cspan:`3` number of valid bits in the data field
+        - :cspan:`2` number of valid bits in the data field
       * - data
         - 26:0
-        - :cspan:`3` data to transmit LSB first
+        - :cspan:`2` data to transmit LSB first
       * - :rspan:`3` field
         - :rspan:`3` 1:0
-        - :cspan:`3` **Controls the bazzle of the braz**
+        - :cspan:`2` **Controls the bazzle of the braz**
 
           This field is totally invented for show. We want this line to shop up
           after a linebreak to mimic the normal register descriptions that we
